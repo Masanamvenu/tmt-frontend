@@ -1,0 +1,55 @@
+.apm-modal-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.apm-modal {
+  background: #fff;
+  padding: 2em;
+  border-radius: 8px;
+  min-width: 320px;
+  box-shadow: 0 2px 8px #aaa;
+  position: relative;
+}
+
+.apm-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: none;
+  background: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.apm-input {
+  width: 100%;
+  padding: 0.6em;
+  margin-bottom: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.apm-error {
+  color: red;
+  margin-bottom: 1em;
+}
+
+.apm-add-btn {
+  width: 100%;
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.7em;
+  font-size: 1em;
+  cursor: pointer;
+}
