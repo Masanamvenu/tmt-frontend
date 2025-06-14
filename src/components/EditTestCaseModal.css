@@ -1,0 +1,212 @@
+.etcm-modal-overlay {
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(34, 42, 54, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.etcm-modal {
+  background: #fff;
+  min-width: 700px;
+  max-width: 900px;
+  border-radius: 10px;
+  box-shadow: 0 4px 32px rgba(30,34,40,0.18);
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.etcm-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e6e9ef;
+  padding: 22px 30px 14px 30px;
+}
+.etcm-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+  color: #234;
+}
+.etcm-title-input {
+  width: 100%;
+  font-size: 1.12em;
+  font-weight: 600;
+  border: none;
+  border-bottom: 1px solid #bbd;
+  background: transparent;
+  color: #234;
+  outline: none;
+  padding: 3px 0;
+}
+
+.etcm-close-btn {
+  background: none;
+  border: none;
+  font-size: 2.1em;
+  color: #b5b5b5;
+  cursor: pointer;
+  margin-left: 18px;
+  margin-right: -10px;
+  margin-top: -8px;
+  transition: color 0.18s;
+  line-height: 1;
+}
+.etcm-close-btn:hover {
+  color: #e22;
+}
+
+.etcm-form {
+  padding: 18px 32px 32px 32px;
+}
+
+.etcm-table-modern-outer {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+
+.etcm-table-modern {
+  min-width: 700px;
+  border-collapse: collapse;
+}
+
+.etcm-table-modern-row {
+  display: flex;
+  border-bottom: 1px solid #eee;
+  align-items: stretch;
+}
+
+.etcm-table-modern-header {
+  background: #f3f7fc;
+  font-weight: 600;
+}
+
+.etcm-table-modern-cell {
+  flex: 1;
+  padding: 8px 7px;
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  font-size: 1em;
+}
+
+.etcm-table-modern-header-cell {
+  color: #456;
+  font-weight: 500;
+  font-size: 1.03em;
+  border-bottom: 2px solid #e1e6ef;
+}
+
+.etcm-input {
+  width: 100%;
+  border: 1px solid #c5c5c5;
+  border-radius: 4px;
+  padding: 5px 7px;
+  font-size: 1em;
+  background: #f8f9fa;
+  outline: none;
+  transition: border-color 0.14s;
+}
+.etcm-input:focus {
+  border-color: #1e88e5;
+}
+
+.etcm-remove-step-btn {
+  background: #fff0f0;
+  color: #b33;
+  border: 1px solid #f2b0b0;
+  border-radius: 3px;
+  font-size: 1.1em;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: center;
+  margin-left: 8px;
+}
+.etcm-remove-step-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.etcm-remove-step-btn:hover:not(:disabled) {
+  background: #ffeaea;
+}
+
+.etcm-add-step-btn {
+  margin-left: 0;
+  margin-top: 4px;
+  background: #e7f6ed;
+  color: #18804b;
+  border: 1px solid #bde5ce;
+  border-radius: 3px;
+  padding: 4px 16px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+.etcm-add-step-btn:hover {
+  background: #e1f0ea;
+}
+
+.etcm-footer-btns {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 34px;
+  gap: 0.8em;
+}
+
+.etcm-save-btn {
+  background: #1e88e5;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 32px;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.etcm-save-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.etcm-save-btn:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.etcm-cancel-btn {
+  background: #fff;
+  color: #2d2d2d;
+  border: 1px solid #bbb;
+  border-radius: 5px;
+  padding: 8px 32px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.etcm-cancel-btn:hover {
+  background: #f6f7f9;
+}
+
+@media (max-width: 800px) {
+  .etcm-modal {
+    min-width: 0;
+    width: 97vw;
+    max-width: 100vw;
+    padding: 0;
+  }
+  .etcm-table-modern {
+    min-width: 0;
+  }
+  .etcm-form {
+    padding: 12px 4vw 22px 4vw;
+  }
+}

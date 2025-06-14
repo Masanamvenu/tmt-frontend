@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { getTestCases, runTestCase } from "../apiutility";
+import { getTestCases, runTestCase, saveTestCasesBatch, deleteTestCaseByIds } from "../apiutility";
 import { fetchTestCaseByIds } from "../apiutility";
+import EditTestCaseModal from "./EditTestCaseModal";
 import TestCaseDisplay from "./TestCaseDisplay";
 import "./RightSection.css";
 
@@ -14,6 +15,12 @@ function RightSection({ run, onAddTestCase, onTestCaseClick }) {
   const [runLoading, setRunLoading] = useState(false);
   const [runResult, setRunResult] = useState(null);
   const [runError, setRunError] = useState(null);
+  const [deleteLoadingIndex, setDeleteLoadingIndex] = useState(null);
+
+  // modal state for adding a test case
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addModalSaving, setAddModalSaving] = useState(false);
+  const [addModalError, setAddModalError] = useState("");
 
   useEffect(() => {
     if (!run) {
@@ -62,13 +69,31 @@ function RightSection({ run, onAddTestCase, onTestCaseClick }) {
     setDetailsLoading(false);
   };
 
+  // --- DELETE SINGLE TEST CASE ---
+  const handleDeleteTestCase = async (tc, idx) => {
+    if (!tc) return;
+    setDeleteLoadingIndex(idx);
+    try {
+      await deleteTestCaseByIds(tc.projectID, tc.releaseID, tc.runID, tc.testCaseID || tc.testCaseId);
+      setTestCases(prev =>
+        prev.filter(
+          t => (t.testCaseID || t.testCaseId) !== (tc.testCaseID || tc.testCaseId)
+        )
+      );
+      // If details panel is open for this test case, close it
+      if (selectedTestCase && (selectedTestCase.testCaseID || selectedTestCase.testCaseId) === (tc.testCaseID || tc.testCaseId)) {
+        setSelectedTestCase(null);
+        if (onTestCaseClick) onTestCaseClick(null); // inform parent if needed
+      }
+    } catch (e) {
+      alert(e.message || "Failed to delete test case");
+    }
+    setDeleteLoadingIndex(null);
+  };
+
   const handleCloseDetails = () => {
     setSelectedTestCase(null);
     setDetailsError("");
-  };
-
-  const handleEdit = () => {
-    // Your custom edit logic (if any)
   };
 
   // --- RUN BUTTON HANDLER ---
@@ -104,6 +129,50 @@ function RightSection({ run, onAddTestCase, onTestCaseClick }) {
     }
   };
 
+  // --- ADD TEST CASE MODAL LOGIC ---
+  const handleAddTestCaseClick = () => {
+    setShowAddModal(true);
+    setAddModalError("");
+  };
+
+  // This function is passed to EditTestCaseModal.onSave in isAdd mode
+  const handleSaveNewTestCase = async (payload) => {
+    setAddModalSaving(true);
+    setAddModalError("");
+    try {
+      await saveTestCasesBatch(payload);
+      setShowAddModal(false);
+      setAddModalSaving(false);
+      // After successful add, reload the list
+      setLoading(true);
+      const allTestCases = await getTestCases(run.runID);
+      const filtered = allTestCases.filter(tc => tc.runID === run.runID);
+      setTestCases(filtered);
+      setLoading(false);
+    } catch (e) {
+      setAddModalError(e.message || "Failed to add test case");
+      setAddModalSaving(false);
+    }
+  };
+
+  const emptyTestCase = {
+    projectID: run?.projectID,
+    releaseID: run?.releaseID,
+    runID: run?.runID,
+    testCaseName: "",
+    testSteps: [
+      {
+        testSteps: "",
+        expectedResult: "",
+        actualResult: "",
+        locatorType: "",
+        locatorValue: "",
+        browserActions: "",
+        testdata: ""
+      }
+    ]
+  };
+
   if (!run) {
     return (
       <section className="right-section right-section-empty">
@@ -135,7 +204,7 @@ function RightSection({ run, onAddTestCase, onTestCaseClick }) {
         </button>
         <button
           className="rs-add-btn-circle-small"
-          onClick={onAddTestCase}
+          onClick={handleAddTestCaseClick}
           title="Add Test Case"
         >
           <span className="rs-add-btn-plus">+</span>
@@ -166,8 +235,7 @@ function RightSection({ run, onAddTestCase, onTestCaseClick }) {
             <div
               key={tc.testCaseID || tc.testCaseName + idx}
               className={`rs-tc-card${selectedIndexes.includes(idx) ? " rs-tc-card-selected" : ""}`}
-              onClick={() => handleTestCaseClick(tc)}
-              style={{ cursor: "pointer" }}
+              style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
             >
               <input
                 type="checkbox"
@@ -178,7 +246,33 @@ function RightSection({ run, onAddTestCase, onTestCaseClick }) {
                 }}
                 className="rs-tc-checkbox"
               />
-              <span className="rs-tc-name">{tc.testCaseName}</span>
+              <span
+                className="rs-tc-name"
+                onClick={() => handleTestCaseClick(tc)}
+                style={{ flex: 1 }}
+              >
+                {tc.testCaseName}
+              </span>
+              <button
+                className="rs-tc-delete-btn"
+                onClick={e => {
+                  e.stopPropagation();
+                  handleDeleteTestCase(tc, idx);
+                }}
+                disabled={deleteLoadingIndex === idx}
+                style={{
+                  marginLeft: 8,
+                  background: "#fde6e6",
+                  color: "#b71c1c",
+                  border: "none",
+                  borderRadius: 4,
+                  padding: "2px 9px",
+                  cursor: deleteLoadingIndex === idx ? "not-allowed" : "pointer"
+                }}
+                title="Delete test case"
+              >
+                {deleteLoadingIndex === idx ? "Deleting..." : "🗑️"}
+              </button>
             </div>
           ))}
         </div>
@@ -188,6 +282,18 @@ function RightSection({ run, onAddTestCase, onTestCaseClick }) {
       )}
       {detailsError && (
         <div className="rs-details-error">{detailsError}</div>
+      )}
+
+      {/* --- ADD TEST CASE MODAL --- */}
+      {showAddModal && (
+        <EditTestCaseModal
+          testCase={emptyTestCase}
+          onCancel={() => setShowAddModal(false)}
+          onSave={handleSaveNewTestCase}
+          isAdd
+          saving={addModalSaving}
+          error={addModalError}
+        />
       )}
     </section>
   );

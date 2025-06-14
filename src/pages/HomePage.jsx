@@ -4,6 +4,8 @@ import Sidebar from "../components/Sidebar";
 import RightSection from "../components/RightSection";
 import TestCaseEditor from "../components/TestCaseEditor";
 import TestCaseDisplay from "../components/TestCaseDisplay";
+import EditTestCaseModal from "../components/EditTestCaseModal";
+import { deleteTestCaseByIds } from "../apiutility"; // <-- import the API util
 import "./HomePage.css";
 
 const BROWSER_ACTIONS = [
@@ -15,7 +17,6 @@ const BROWSER_ACTIONS = [
   "IMPLICITLYWAIT",
   "EXPLICITWAIT",
   "ISDISPLAYED",
-
 ];
 
 function HomePage({ onLogout }) {
@@ -23,7 +24,12 @@ function HomePage({ onLogout }) {
   const [testCasesByRun, setTestCasesByRun] = useState({});
   const [showEditor, setShowEditor] = useState(false);
   const [displayTestCase, setDisplayTestCase] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false); // NEW
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // For delete loading state
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   // Add new test case
   const handleAddTestCase = ({ testCaseName, rows }) => {
@@ -50,10 +56,25 @@ function HomePage({ onLogout }) {
   // Close display panel
   const handleCloseDisplay = () => setDisplayTestCase(null);
 
-  // Edit test case
-  const handleEditTestCase = () => setShowEditor(true);
+  // Open modal for editing
+  const handleEditTestCase = () => setShowEditModal(true);
 
-  // Save edits
+  // Save edits from the modal
+  const handleSaveEditModal = (updatedTestCase) => {
+    if (!selectedRun || !displayTestCase) return;
+    setTestCasesByRun(prev => {
+      const list = prev[selectedRun.runID] || [];
+      const idx = list.findIndex(tc => tc.testCaseName === displayTestCase.testCaseName);
+      if (idx === -1) return prev;
+      const updated = [...list];
+      updated[idx] = { ...updated[idx], ...updatedTestCase };
+      return { ...prev, [selectedRun.runID]: updated };
+    });
+    setDisplayTestCase(updatedTestCase);
+    setShowEditModal(false);
+  };
+
+  // Save edits from legacy editor (not modal)
   const handleSaveEdit = ({ testCaseName, rows }) => {
     if (!selectedRun || !displayTestCase) return;
     setTestCasesByRun(prev => {
@@ -66,6 +87,34 @@ function HomePage({ onLogout }) {
     });
     setDisplayTestCase(null);
     setShowEditor(false);
+  };
+
+  // --- NEW: Delete handler for details view ---
+  const handleDeleteTestCase = async () => {
+    if (!selectedRun || !displayTestCase) return;
+    setDeleteLoading(true);
+    setDeleteError("");
+    try {
+      // Remove from backend if needed
+      await deleteTestCaseByIds(
+        selectedRun.projectID,
+        selectedRun.releaseID,
+        selectedRun.runID,
+        displayTestCase.testCaseID || displayTestCase.testCaseId
+      );
+      // Remove from local state
+      setTestCasesByRun(prev => {
+        const list = prev[selectedRun.runID] || [];
+        const filtered = list.filter(
+          tc => (tc.testCaseID || tc.testCaseId) !== (displayTestCase.testCaseID || displayTestCase.testCaseId)
+        );
+        return { ...prev, [selectedRun.runID]: filtered };
+      });
+      setDisplayTestCase(null);
+    } catch (e) {
+      setDeleteError(e.message || "Failed to delete test case");
+    }
+    setDeleteLoading(false);
   };
 
   return (
@@ -95,9 +144,14 @@ function HomePage({ onLogout }) {
             {displayTestCase && !showEditor && (
               <TestCaseDisplay
                 testCase={displayTestCase}
-                runID={selectedRun?.runID} 
+                runID={selectedRun?.runID}
+                projectId={selectedRun?.projectID}
+                releaseId={selectedRun?.releaseID}
                 onClose={handleCloseDisplay}
                 onEdit={handleEditTestCase}
+                onDelete={handleDeleteTestCase}
+                deleteLoading={deleteLoading}
+                deleteError={deleteError}
               />
             )}
             {showEditor && (
@@ -109,6 +163,14 @@ function HomePage({ onLogout }) {
                 onSave={displayTestCase ? handleSaveEdit : handleAddTestCase}
                 onCancel={() => { setShowEditor(false); setDisplayTestCase(null); }}
                 testCase={displayTestCase}
+              />
+            )}
+            {/* Edit modal for editing test case */}
+            {showEditModal && displayTestCase && (
+              <EditTestCaseModal
+                testCase={displayTestCase}
+                onCancel={() => setShowEditModal(false)}
+                onSave={handleSaveEditModal}
               />
             )}
           </div>
