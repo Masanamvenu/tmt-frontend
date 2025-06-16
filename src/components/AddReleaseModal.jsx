@@ -12,41 +12,48 @@ function AddReleaseModal({ open, onClose, onSave, projectName }) {
     }
   }, [open]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!releaseName.trim()) {
-      setError("Release name is required.");
+  const handleSave = () => {
+    const trimmedName = releaseName.trim();
+    if (trimmedName.length < 2 || trimmedName.length > 16) {
+      setError("Name must be 3 to 10 characters.");
       return;
     }
-    onSave(releaseName.trim());
+    onSave(trimmedName);
     setReleaseName("");
     setError("");
+  };
+
+  const handleClose = () => {
+    setReleaseName("");
+    setError("");
+    onClose();
   };
 
   if (!open) return null;
 
   return (
-    <div className="arm-modal-bg">
-      <div className="arm-modal">
-        <button className="arm-close-btn" onClick={onClose}>×</button>
+    <div className="modal-overlay">
+      <div className="modal">
         <h2>Add Release {projectName ? `for "${projectName}"` : ""}</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Release Name"
-            value={releaseName}
-            onChange={e => {
-              setReleaseName(e.target.value);
-              setError("");
-            }}
-            className="arm-input"
-            autoFocus
-          />
-          {error && <div className="arm-error">{error}</div>}
-          <button className="arm-save-btn" type="submit">
+        <input
+          type="text"
+          placeholder="Enter release name"
+          value={releaseName}
+          onChange={(e) => {
+            setReleaseName(e.target.value);
+            setError("");
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSave();
+          }}
+        />
+        {error && <div className="error" style={{ color: "red", marginTop: "5px" }}>{error}</div>}
+        <div className="modal-actions">
+          <button onClick={handleSave} disabled={!releaseName.trim()}>
             Save
           </button>
-        </form>
+          <button onClick={handleClose}>Cancel</button>
+        </div>
       </div>
     </div>
   );

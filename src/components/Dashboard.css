@@ -1,0 +1,13 @@
+.dashboard-content {
+  padding: 32px;
+  background: #f9fafd;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.dashboard-content h2 {
+  margin-bottom: 18px;
+  color: #2d3a4b;
+}
+.dashboard-content ul {
+  padding-left: 18px;
+}

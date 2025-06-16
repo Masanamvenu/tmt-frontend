@@ -1,11 +1,12 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import RightSection from "../components/RightSection";
 import TestCaseEditor from "../components/TestCaseEditor";
 import TestCaseDisplay from "../components/TestCaseDisplay";
 import EditTestCaseModal from "../components/EditTestCaseModal";
-import { deleteTestCaseByIds } from "../apiutility"; // <-- import the API util
+import { deleteTestCaseByIds } from "../apiutility";
 import "./HomePage.css";
 
 const BROWSER_ACTIONS = [
@@ -19,19 +20,26 @@ const BROWSER_ACTIONS = [
   "ISDISPLAYED",
 ];
 
-function HomePage({ onLogout }) {
+function HomePage({ isLoggedIn = true, onLogout }) {
+  const navigate = useNavigate(); // <-- add this
+
+  // Wrap onLogout to also navigate to landing
+  const handleLogout = () => {
+    if (onLogout) onLogout();
+    navigate("/");
+  };
+
   const [selectedRun, setSelectedRun] = useState(null);
   const [testCasesByRun, setTestCasesByRun] = useState({});
   const [showEditor, setShowEditor] = useState(false);
   const [displayTestCase, setDisplayTestCase] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false); // NEW
+  const [showEditModal, setShowEditModal] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  // For delete loading state
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
-  // Add new test case
+  // ...rest of your handlers (unchanged)...
+
   const handleAddTestCase = ({ testCaseName, rows }) => {
     if (!selectedRun) return;
     setTestCasesByRun(prev => {
@@ -47,19 +55,15 @@ function HomePage({ onLogout }) {
     setShowEditor(false);
   };
 
-  // Show test case details
   const handleShowTestCase = (testCase) => {
     setDisplayTestCase(testCase);
     setShowEditor(false);
   };
 
-  // Close display panel
   const handleCloseDisplay = () => setDisplayTestCase(null);
 
-  // Open modal for editing
   const handleEditTestCase = () => setShowEditModal(true);
 
-  // Save edits from the modal
   const handleSaveEditModal = (updatedTestCase) => {
     if (!selectedRun || !displayTestCase) return;
     setTestCasesByRun(prev => {
@@ -74,7 +78,6 @@ function HomePage({ onLogout }) {
     setShowEditModal(false);
   };
 
-  // Save edits from legacy editor (not modal)
   const handleSaveEdit = ({ testCaseName, rows }) => {
     if (!selectedRun || !displayTestCase) return;
     setTestCasesByRun(prev => {
@@ -89,20 +92,17 @@ function HomePage({ onLogout }) {
     setShowEditor(false);
   };
 
-  // --- NEW: Delete handler for details view ---
   const handleDeleteTestCase = async () => {
     if (!selectedRun || !displayTestCase) return;
     setDeleteLoading(true);
     setDeleteError("");
     try {
-      // Remove from backend if needed
       await deleteTestCaseByIds(
         selectedRun.projectID,
         selectedRun.releaseID,
         selectedRun.runID,
         displayTestCase.testCaseID || displayTestCase.testCaseId
       );
-      // Remove from local state
       setTestCasesByRun(prev => {
         const list = prev[selectedRun.runID] || [];
         const filtered = list.filter(
@@ -119,7 +119,11 @@ function HomePage({ onLogout }) {
 
   return (
     <div>
-      <Header showLogin={false} onLogout={onLogout} />
+      <Header
+        isLoggedIn={isLoggedIn}
+        onLoginClick={() => {}}
+        onLogoutClick={handleLogout}
+      />
       <div className="hp-layout">
         <Sidebar
           onRunClick={setSelectedRun}
@@ -139,7 +143,6 @@ function HomePage({ onLogout }) {
             onAddTestCase={() => { setShowEditor(true); setDisplayTestCase(null); }}
             onTestCaseClick={handleShowTestCase}
           />
-          {/* The main panel (right), for editor or display */}
           <div className="main-panel">
             {displayTestCase && !showEditor && (
               <TestCaseDisplay
@@ -165,7 +168,6 @@ function HomePage({ onLogout }) {
                 testCase={displayTestCase}
               />
             )}
-            {/* Edit modal for editing test case */}
             {showEditModal && displayTestCase && (
               <EditTestCaseModal
                 testCase={displayTestCase}

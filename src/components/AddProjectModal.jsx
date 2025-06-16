@@ -1,64 +1,72 @@
 import React, { useState } from "react";
-import "./AddProjectModal.css";
-import { addProject } from "../apiutility";
+import "./AddProjectModal.css"; // Ensure you have basic modal styles
 
 function AddProjectModal({ open, onClose, onAdd }) {
   const [projectName, setProjectName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   if (!open) return null;
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!projectName.trim()) {
-      setError("Project name is required.");
+  const handleSave = async () => {
+    const trimmedName = projectName.trim();
+    if (trimmedName.length < 2 || trimmedName.length > 10) {
+      setError("Project name must be between 3 and 10 characters.");
       return;
     }
-    setLoading(true);
+
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
-      const newProject = await addProject(projectName.trim());
+      await onAdd(trimmedName);
       setProjectName("");
       setError("");
-      setLoading(false);
-      if (onAdd) onAdd(newProject);
       onClose();
     } catch (err) {
-      setError(err.message || "Failed to add project");
-      setLoading(false);
+      console.error(err);
+      alert("Error while adding project");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (!isSubmitting) {
+      setProjectName("");
+      setError("");
+      onClose();
     }
   };
 
   return (
-    <div className="apm-modal-bg">
-      <div className="apm-modal">
-        <button
-          className="apm-close-btn"
-          onClick={onClose}
-        >×</button>
-        <h2>Add Project</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Project Name"
-            value={projectName}
-            onChange={(e) => {
-              setProjectName(e.target.value);
-              setError("");
-            }}
-            className="apm-input"
-            autoFocus
-            disabled={loading}
-          />
-          {error && <div className="apm-error">{error}</div>}
+    <div className="modal-overlay">
+      <div className="modal">
+        <h2>Add New Project</h2>
+        <input
+          type="text"
+          value={projectName}
+          onChange={(e) => {
+            setProjectName(e.target.value);
+            setError("");
+          }}
+          placeholder="Enter project name"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSave();
+          }}
+        />
+        {error && <div className="error">{error}</div>}
+        <div className="modal-actions">
           <button
-            type="submit"
-            className="apm-add-btn"
-            disabled={loading}
+            onClick={handleSave}
+            disabled={isSubmitting || !projectName.trim()}
           >
-            {loading ? "Adding..." : "Add Project"}
+            {isSubmitting ? "Saving..." : "Save"}
           </button>
-        </form>
+          <button onClick={handleClose} disabled={isSubmitting}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );

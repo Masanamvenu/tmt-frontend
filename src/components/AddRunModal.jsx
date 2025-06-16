@@ -12,41 +12,48 @@ function AddRunModal({ open, onClose, onSave, releaseName }) {
     }
   }, [open]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!runName.trim()) {
-      setError("Run name is required.");
+  const handleSave = () => {
+    const trimmedName = runName.trim();
+    if (trimmedName.length < 2 || trimmedName.length > 16) {
+      setError("Name must be 3 to 10 characters.");
       return;
     }
-    onSave(runName.trim());
+    onSave(trimmedName);
     setRunName("");
     setError("");
+  };
+
+  const handleClose = () => {
+    setRunName("");
+    setError("");
+    onClose();
   };
 
   if (!open) return null;
 
   return (
-    <div className="arm-modal-bg">
-      <div className="arm-modal">
-        <button className="arm-close-btn" onClick={onClose}>×</button>
+    <div className="modal-overlay">
+      <div className="modal">
         <h2>Add Run {releaseName ? `for "${releaseName}"` : ""}</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Run Name"
-            value={runName}
-            onChange={e => {
-              setRunName(e.target.value);
-              setError("");
-            }}
-            className="arm-input"
-            autoFocus
-          />
-          {error && <div className="arm-error">{error}</div>}
-          <button className="arm-save-btn" type="submit">
+        <input
+          type="text"
+          placeholder="Enter run name"
+          value={runName}
+          onChange={(e) => {
+            setRunName(e.target.value);
+            setError("");
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSave();
+          }}
+        />
+        {error && <div className="error" style={{ color: "red", marginTop: "5px" }}>{error}</div>}
+        <div className="modal-actions">
+          <button onClick={handleSave} disabled={!runName.trim()}>
             Save
           </button>
-        </form>
+          <button onClick={handleClose}>Cancel</button>
+        </div>
       </div>
     </div>
   );
