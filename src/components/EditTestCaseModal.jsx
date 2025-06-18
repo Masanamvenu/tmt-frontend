@@ -3,14 +3,33 @@ import "./EditTestCaseModal.css";
 import { updateTestCaseById } from "../apiutility";
 
 const BROWSER_ACTIONS = [
-  "OPEN_BROWSER",
-  "ENTER_URL",
-  "CLOSE_BROWSER",
-  "ENTER",
+  "OPEN_BROWSER", 
+  "ENTER_URL", 
+  "CLOSE_BROWSER", 
+  "ENTER_TEXT", 
   "WAIT",
-  "IMPLICITLYWAIT",
-  "EXPLICITWAIT",
+  "IMPLICITLYWAIT", 
+  "EXPLICITWAIT", 
   "ISDISPLAYED",
+  "CLICK_WEB_ELEMENT", 
+  "NAVIGATION_TO",
+  "NAVIGATE_BACK",
+  "NAVIGATE_FORWARD",
+  "NAVIGATE_REFRESH",
+  "RIGHT_CLICK",
+  "DOUBLE_CLICK",
+  "SELECTBYVISIBILETEXT",
+  "SELECTBYINDEX",
+  "SELECTBYVALUE",
+  "ALERT_WITH_OK",
+  "ALERT_CONFIRMBOX_WITH_OK",
+  "ALERT_CONFIRMBOX_WITH_CANCEL",
+  "MOUSE_HOVER",
+];
+
+const LOCATOR_TYPES = [
+  "ID", "NAME", "XPATH", "LINKTEXT", "PARTIALLINKTEXT",
+  "CSSSELECTOR", "TAGNAME", "CLASSNAME"
 ];
 
 const columns = [
@@ -25,31 +44,12 @@ const columns = [
 ];
 
 const emptyStep = {
-  testSteps: "",
-  expectedResult: "",
-  actualResult: "",
-  locatorType: "",
-  locatorValue: "",
-  browserActions: "",
-  testdata: ""
+  testSteps: "", expectedResult: "", actualResult: "",
+  locatorType: "", locatorValue: "", browserActions: "", testdata: ""
 };
 
-/**
- * Props:
- *  - testCase: the test case object to edit/add
- *  - onCancel: function to close/cancel editing
- *  - onSave: function(updatedTestCase) called after successful save
- *  - isAdd: (optional) true for Add mode, false/undefined for Edit
- *  - saving: (optional) loading state from parent
- *  - error: (optional) error message from parent
- */
 const EditTestCaseModal = ({
-  testCase,
-  onCancel,
-  onSave,
-  isAdd = false,
-  saving: savingProp,
-  error: errorProp
+  testCase, onCancel, onSave, isAdd = false, saving: savingProp, error: errorProp
 }) => {
   const [testCaseName, setTestCaseName] = useState(testCase.testCaseName || "");
   const [steps, setSteps] = useState(
@@ -58,46 +58,56 @@ const EditTestCaseModal = ({
           testSteps: step.testSteps || step.action || "",
           expectedResult: step.expectedResult || "",
           actualResult: step.actualResult || "",
-          locatorType: step.locatorType || "",
+          locatorType: Array.isArray(step.locatorType) ? (step.locatorType[0] || "") : step.locatorType || "",
           locatorValue: step.locatorValue || "",
-          browserActions: Array.isArray(step.browserActions)
-            ? (step.browserActions[0] || "")
-            : step.browserActions || "",
+          browserActions: Array.isArray(step.browserActions) ? (step.browserActions[0] || "") : step.browserActions || "",
           testdata: step.testdata || ""
         }))
-      : [ { ...emptyStep } ]
+      : [{ ...emptyStep }]
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // External saving/error from parent for Add mode
   const isLoading = typeof savingProp === "boolean" ? savingProp : saving;
   const displayError = errorProp || error;
 
   const handleStepChange = (idx, key, value) => {
     setSteps(steps =>
-      steps.map((step, i) =>
-        i === idx ? { ...step, [key]: value } : step
-      )
+      steps.map((step, i) => i === idx ? { ...step, [key]: value } : step)
     );
   };
 
   const handleAddStep = () => setSteps([...steps, { ...emptyStep }]);
   const handleRemoveStep = (idx) => setSteps(steps => steps.filter((_, i) => i !== idx));
 
-  // Always convert browserActions to array for backend
-  function toBackendTestSteps(steps) {
+  const toBackendTestSteps = (steps) => {
     return steps.map(step => ({
       ...step,
-      browserActions: step.browserActions
-        ? [step.browserActions]
-        : []
+      browserActions: step.browserActions ? [step.browserActions] : []
     }));
-  }
+  };
 
-  // Save handler: POST if isAdd, PUT otherwise
   const handleSave = async (e) => {
     e.preventDefault();
+
+    const hasValidTestStep = steps.some(step =>
+      step.testSteps.trim() !== "" && step.expectedResult.trim() !== ""
+    );
+
+    if (!hasValidTestStep) {
+      setError("Each test step must have both a 'Test Step' and 'Expected Result'.");
+      return;
+    }
+
+    const hasAnyMissingFields = steps.some(step =>
+      step.testSteps.trim() === "" || step.expectedResult.trim() === ""
+    );
+
+    if (hasAnyMissingFields) {
+      setError("All Test Steps must have a non-empty 'Test Step' and 'Expected Result'.");
+      return;
+    }
+
     if (isAdd) {
       if (onSave) {
         await onSave({
@@ -112,16 +122,11 @@ const EditTestCaseModal = ({
       setSaving(true);
       setError("");
       try {
-        // Compose params for updateTestCaseById (PUT)
-        const projectID = testCase.projectID;
-        const releaseID = testCase.releaseID;
-        const runID = testCase.runID;
-        const testCaseID = testCase.testCaseID || testCase.testCaseId;
         const payload = {
-          projectID,
-          releaseID,
-          runID,
-          testCaseID,
+          projectID: testCase.projectID,
+          releaseID: testCase.releaseID,
+          runID: testCase.runID,
+          testCaseID: testCase.testCaseID || testCase.testCaseId,
           testCaseName,
           testSteps: toBackendTestSteps(steps),
         };
@@ -148,17 +153,21 @@ const EditTestCaseModal = ({
               required
             />
           </h2>
-          <button className="etcm-close-btn" onClick={onCancel} title="Close">&times;</button>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button type="button" className="etcm-btn" onClick={handleAddStep}>+ Add Step</button>
+            <button type="button" className="etcm-btn" onClick={handleSave} disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save"}
+            </button>
+            <button className="etcm-close-btn" onClick={onCancel}>&times;</button>
+          </div>
         </div>
+
         <form className="etcm-form" onSubmit={handleSave}>
-          <div className="etcm-table-modern-outer">
+          <div className="etcm-table-wrapper">
             <div className="etcm-table-modern">
               <div className="etcm-table-modern-row etcm-table-modern-header">
                 {columns.map(col => (
-                  <div
-                    className="etcm-table-modern-cell etcm-table-modern-header-cell"
-                    key={col.label}
-                  >
+                  <div className="etcm-table-modern-cell etcm-table-modern-header-cell" key={col.label}>
                     {col.label}
                   </div>
                 ))}
@@ -168,8 +177,9 @@ const EditTestCaseModal = ({
                 <div className="etcm-table-modern-row" key={idx}>
                   <div className="etcm-table-modern-cell">{idx + 1}</div>
                   <div className="etcm-table-modern-cell">
-                    <input
-                      className="etcm-input"
+                    <textarea
+                      className="etcm-textarea"
+                      rows={3}
                       value={step.testSteps}
                       onChange={e => handleStepChange(idx, "testSteps", e.target.value)}
                       placeholder="Test Step"
@@ -177,28 +187,35 @@ const EditTestCaseModal = ({
                     />
                   </div>
                   <div className="etcm-table-modern-cell">
-                    <input
-                      className="etcm-input"
+                    <textarea
+                      className="etcm-textarea"
+                      rows={3}
                       value={step.expectedResult}
                       onChange={e => handleStepChange(idx, "expectedResult", e.target.value)}
                       placeholder="Expected Result"
+                      required
                     />
                   </div>
                   <div className="etcm-table-modern-cell">
-                    <input
-                      className="etcm-input"
+                    <textarea
+                      className="etcm-textarea"
+                      rows={3}
                       value={step.actualResult}
                       onChange={e => handleStepChange(idx, "actualResult", e.target.value)}
                       placeholder="Actual Result"
                     />
                   </div>
                   <div className="etcm-table-modern-cell">
-                    <input
+                    <select
                       className="etcm-input"
                       value={step.locatorType}
                       onChange={e => handleStepChange(idx, "locatorType", e.target.value)}
-                      placeholder="Locator Type"
-                    />
+                    >
+                      <option value="">Select Locator Type</option>
+                      {LOCATOR_TYPES.map(type => (
+                        <option value={type} key={type}>{type}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="etcm-table-modern-cell">
                     <input
@@ -234,41 +251,13 @@ const EditTestCaseModal = ({
                       className="etcm-remove-step-btn"
                       onClick={() => handleRemoveStep(idx)}
                       disabled={steps.length <= 1}
-                      title="Remove Step"
                     >×</button>
                   </div>
                 </div>
               ))}
-              <div className="etcm-table-modern-row etcm-table-modern-row-add">
-                <div className="etcm-table-modern-cell" colSpan={columns.length + 1}>
-                  <button type="button" className="etcm-add-step-btn" onClick={handleAddStep}>
-                    + Add Step
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
-          {displayError && (
-            <div style={{ color: "#d33", marginBottom: 12 }}>{displayError}</div>
-          )}
-          <div className="etcm-footer-btns">
-            <button
-              type="button"
-              className="etcm-cancel-btn"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="etcm-save-btn"
-              disabled={isLoading}
-              style={{ marginLeft: 10 }}
-            >
-              {isLoading ? "Saving..." : "Save"}
-            </button>
-          </div>
+          {displayError && <div style={{ color: "#d33", marginTop: 12 }}>{displayError}</div>}
         </form>
       </div>
     </div>

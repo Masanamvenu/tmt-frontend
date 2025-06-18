@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Reports from "../components/Reports";
 import "./ReportsPage.css";
+import ReportsFolders from "../components/ReportsFolders";
 
 const SIDEBAR_WIDTH = 220;
 const SIDEBAR_COLLAPSED_WIDTH = 48;

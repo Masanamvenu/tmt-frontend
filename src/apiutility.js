@@ -345,7 +345,7 @@ export async function updateTestCaseById({ projectID, releaseID, runID, testCase
 export async function deleteTestCaseByIds(projectID, releaseID, runID, testCaseID) {
   const token = localStorage.getItem("token");
   const response = await fetch(
-    `${process.env.REACT_APP_API_BASE}/testcases/${projectID}/${releaseID}/${runID}/${testCaseID}`,
+    `${API_BASE}/testcases/${projectID}/${releaseID}/${runID}/${testCaseID}`,
     {
       method: "DELETE",
       headers: {
@@ -366,3 +366,88 @@ export async function deleteTestCaseByIds(projectID, releaseID, runID, testCaseI
   }
   return data;
 }
+//getTestResults function to fetch test results
+export async function getTestResults() {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(
+    `${API_BASE}/runtestcase/testresults`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    }
+  );
+  let data;
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    data = await response.text();
+  }
+  if (!response.ok) {
+    throw new Error(data.error || data || "Failed to fetch test results");
+  }
+  return data;
+}
+
+export async function updateSeleniumVersion(version) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(
+    `${API_BASE}/pom/update-selenium-version?version=${encodeURIComponent(version)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      }
+    }
+  );
+  let data;
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    data = await response.text();
+  }
+  if (!response.ok) {
+    throw new Error(data.error || data || "Failed to update Selenium version");
+  }
+  return data;
+}
+
+// ...existing code...
+
+/**
+ * Update a dependency version in pom.xml
+ * @param {string} artifactId
+ * @param {string} version
+ */
+export async function updateDependencyVersion(artifactId, version) {
+  const token = localStorage.getItem("token");
+  const response = await fetch(
+    `${API_BASE}/pom/update-dependency-version?artifactId=${encodeURIComponent(artifactId)}&version=${encodeURIComponent(version)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      }
+    }
+  );
+  let data;
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    data = await response.text();
+  }
+  if (!response.ok) {
+    throw new Error(data.error || data || "Failed to update dependency version");
+  }
+  return data;
+}
+
+// ...existing code...

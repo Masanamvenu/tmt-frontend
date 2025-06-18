@@ -1,0 +1,99 @@
+.reports-page {
+  display: flex;
+  min-height: 100vh;
+  background: #f6f8fa;
+}
+
+.reports-right-section {
+  flex: 1;
+  padding: 32px 40px;
+  background: #f6f8fa;
+  min-height: 100vh;
+  transition: margin-left 0.2s;
+}
+
+.reports-right-section-collapsed {
+  /* No extra styles, marginLeft is handled inline */
+}
+
+/* Folder tree styles */
+.rf-tree-root {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(60, 60, 60, 0.07);
+  padding: 28px 32px 24px 32px;
+  color: #222;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.rf-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 18px;
+  letter-spacing: 0.5px;
+}
+
+.rf-folder,
+.rf-subfolder {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.08rem;
+  padding: 7px 0 7px 0;
+  display: flex;
+  align-items: center;
+  transition: background 0.13s;
+  border-radius: 6px;
+}
+
+.rf-folder:hover,
+.rf-subfolder:hover {
+  background: #e3f2fd;
+}
+
+.rf-folder-icon,
+.rf-subfolder-icon {
+  margin-right: 10px;
+  font-size: 1.1em;
+}
+
+.rf-run {
+  font-weight: 400;
+  font-size: 1.01rem;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  padding: 4px 0 4px 0;
+}
+
+.rf-run-icon {
+  margin-right: 8px;
+  font-size: 1em;
+}
+
+.rf-empty {
+  color: #90a4ae;
+  font-size: 0.97rem;
+  margin: 6px 0 6px 18px;
+}
+
+.rf-error {
+  color: #d32f2f;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.rf-loading {
+  color: #1976d2;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+/* Remove default ul/li styles for tree */
+.rf-tree-root ul,
+.rf-tree-root li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
